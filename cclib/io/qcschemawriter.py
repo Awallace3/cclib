@@ -86,6 +86,7 @@ _NO_UNIT_LABEL = {
     "geotargets",
     "geovalues",
     "hessian",
+    "polarizabilities",
     "scanparm",
     "scftargets",
     "scfvalues",
@@ -144,6 +145,23 @@ def _json_safe(value):
     raise TypeError(f"Cannot serialize cclib extras value {type(value)!r}")
 
 
+def validate_qcschema_output(qcschema_dict):
+    """Validate a QCSchema output dict against the MolSSI JSON schema.
+
+    Fields that QCElemental defines but the pinned MolSSI schema version
+    doesn't know about yet are dropped first, since the schema forbids
+    additional properties.  Currently that is only wavefunction "restricted".
+    """
+    if not _found_qcschema:
+        raise ImportError("The qcschema package is required to validate QCSchema output")
+    wavefunction = {
+        key: value
+        for key, value in qcschema_dict.get("wavefunction", {}).items()
+        if key != "restricted"
+    }
+    qcschema.validate({**qcschema_dict, "wavefunction": wavefunction}, schema_type="output")
+
+
 def _unit_for(attribute):
     if attribute in _AU_CONVERSIONS:
         return _AU_CONVERSIONS[attribute][1]
@@ -153,7 +171,7 @@ def _unit_for(attribute):
         return "dimensionless"
     if attribute in _NATIVE_UNITS:
         return _NATIVE_UNITS[attribute]
-    return "mixed/unknown" if attribute in {"polarizabilities"} else "unknown"
+    return "unknown"
 
 
 class QCSchemaWriter(CJSONWriter):
@@ -331,6 +349,9 @@ class QCSchemaWriter(CJSONWriter):
                 }
             )
 
+        # QCElemental's WavefunctionProperties requires "restricted", but the
+        # MolSSI JSON schemas (both v2 and dev) don't have it yet, so
+        # validate_qcschema_output has to drop it.
         qcschema_dict["wavefunction"] = {
             "basis": {"name": basis_set_name, "center_data": {}, "atom_map": []},
             "restricted": len(self.ccdata.homos) == 1,
@@ -377,7 +398,7 @@ class QCSchemaWriter(CJSONWriter):
         qcschema_dict["return_result"] = return_result
 
         if validate:
-            qcschema.validate(qcschema_dict, schema_type="output")
+            validate_qcschema_output(qcschema_dict)
 
         return qcschema_dict
 

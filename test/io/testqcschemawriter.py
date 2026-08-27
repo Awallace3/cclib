@@ -18,8 +18,6 @@ from cclib.parser.utils import find_package
 
 _found_qcelemental = find_package("qcelemental")
 _found_qcschema = find_package("qcschema")
-if _found_qcschema:
-    import qcschema
 
 
 __filedir__ = os.path.dirname(__file__)
@@ -30,7 +28,7 @@ __datadir__ = __filepath__.joinpath("..", "..").resolve()
 def validate_output(outputpath):
     data = cclib.io.ccread(str(outputpath))
     writer = cclib.io.qcschemawriter.QCSchemaWriter(data)
-    qcschema.validate(writer.as_dict(), schema_type="output")
+    cclib.io.qcschemawriter.validate_qcschema_output(writer.as_dict())
 
 
 def hf_water_ccdata():
