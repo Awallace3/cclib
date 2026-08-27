@@ -184,6 +184,16 @@ class QCSchemaWriterTest(unittest.TestCase):
         )
         self.assertAlmostEqual(result["wavefunction"]["scf_eigenvalues_a"][0], -9.743)
 
+    def test_as_dict_is_json_serializable(self):
+        """Parsed NumPy values are converted to types the json module writes."""
+        fpath = __datadir__ / "data" / "QChem" / "basicQChem5.1" / "dvb_sp.out"
+        data = cclib.io.ccread(str(fpath))
+        result = cclib.io.qcschemawriter.QCSchemaWriter(data).as_dict(validate=False)
+
+        json.dumps(result, allow_nan=False)
+        self.assertIsInstance(result["properties"]["calcinfo_nalpha"], int)
+        self.assertIsInstance(result["molecule"]["molecular_charge"], int)
+
     @unittest.skipUnless(_found_qcschema, "qcschema is not installed")
     def test_validate_output_b3lyp_energy(self):
         fpath = __datadir__ / "data" / "QChem" / "basicQChem5.1" / "dvb_sp.out"

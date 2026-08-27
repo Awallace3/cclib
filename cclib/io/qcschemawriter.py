@@ -397,6 +397,11 @@ class QCSchemaWriter(CJSONWriter):
             raise RuntimeError(f"Don't know driver {driver}")
         qcschema_dict["return_result"] = return_result
 
+        # Everything taken from parsed attributes is a NumPy type, which the
+        # json module can't serialize, so convert the whole payload (and not
+        # just the extras) to native types.
+        qcschema_dict = _json_safe(qcschema_dict)
+
         if validate:
             validate_qcschema_output(qcschema_dict)
 
