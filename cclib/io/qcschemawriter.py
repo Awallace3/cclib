@@ -214,7 +214,7 @@ class QCSchemaWriter(CJSONWriter):
                 value = getattr(self.ccdata, attribute)
                 if attribute in _AU_CONVERSIONS:
                     value = _convert_tree(value, *_AU_CONVERSIONS[attribute])
-                qcschema_dict["extras"][attribute] = _json_safe(value)
+                qcschema_dict["extras"][attribute] = value
                 if (
                     attribute
                     not in set(_AU_CONVERSIONS) | set(_AU_UNITS) | _DIMENSIONLESS | _NO_UNIT_LABEL
