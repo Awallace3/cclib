@@ -181,6 +181,11 @@ class QCSchemaWriter(CJSONWriter):
         super().__init__(ccdata, *args, **kwargs)
 
     def as_dict(self, validate=True):
+        """Build QCSchema output using JSON-serializable native Python values.
+
+        Args:
+            validate: Validate the output against the MolSSI JSON schema.
+        """
         metadata = self.ccdata.metadata
 
         qcschema_dict = {
@@ -397,9 +402,8 @@ class QCSchemaWriter(CJSONWriter):
             raise RuntimeError(f"Don't know driver {driver}")
         qcschema_dict["return_result"] = return_result
 
-        # Everything taken from parsed attributes is a NumPy type, which the
-        # json module can't serialize, so convert the whole payload (and not
-        # just the extras) to native types.
+        # Normalize once at the serialization boundary so direct callers do not
+        # need a NumPy-aware JSON encoder.
         qcschema_dict = _json_safe(qcschema_dict)
 
         if validate:
